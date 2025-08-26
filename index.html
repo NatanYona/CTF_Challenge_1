@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Challegen - Hacker Console</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="./public/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <body>
+    <canvas class="matrix-bg" id="matrix"></canvas>
+    
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-title glitch" data-text="SECURE CTF TERMINAL">SECURE CTF TERMINAL</div>
+            <div class="terminal-buttons">
+                <div class="btn-circle btn-close"></div>
+                <div class="btn-circle btn-minimize"></div>
+                <div class="btn-circle btn-maximize"></div>
+            </div>
+        </div>
+        
+        <div class="typing-text">root@ctf-server:~$ Iniciando challenge...</div>
+        
+        <div class="ascii-art">
+    ██████╗████████╗███████╗     ██████╗██╗  ██╗ █████╗ ██╗     ██╗     ███████╗███╗   ██╗ ██████╗ ███████╗
+   ██╔════╝╚══██╔══╝██╔════╝    ██╔════╝██║  ██║██╔══██╗██║     ██║     ██╔════╝████╗  ██║██╔════╝ ██╔════╝
+   ██║        ██║   █████╗      ██║     ███████║███████║██║     ██║     █████╗  ██╔██╗ ██║██║  ███╗█████╗  
+   ██║        ██║   ██╔══╝      ██║     ██╔══██║██╔══██║██║     ██║     ██╔══╝  ██║╚██╗██║██║   ██║██╔══╝  
+   ╚██████╗   ██║   ██║         ╚██████╗██║  ██║██║  ██║███████╗███████╗███████╗██║ ╚████║╚██████╔╝███████╗
+    ╚═════╝   ╚═╝   ╚═╝          ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
+        </div>
+        
+        <div class="content-section">
+            <div class="section-title">[DESCARGA] Challenge Files</div>
+            <p style="margin-bottom: 15px; opacity: 0.8;">Descarga el archivo comprimido del CTF y comienza tu misión.</p>
+            <a href="#" class="download-btn" onclick="downloadFile()">
+                📦 DESCARGAR CTF.ZIP
+            </a>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-title">[SUBMISIÓN] Flag Validation</div>
+            <p style="margin-bottom: 15px; opacity: 0.8;">Ingresa la flag encontrada en el formato: CTF{...}</p>
+            <form id="flagForm" onsubmit="submitFlag(event)">
+                <input type="text" class="flag-input" placeholder="CTF{tu_flag_aqui}" id="flagInput" required>
+                <button type="submit" class="submit-btn">🚀 VERIFICAR FLAG</button>
+            </form>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px; opacity: 0.6; font-size: 0.9em;">
+            <p>🔒 Sistema encriptado | 👾 Modo hacker activado | 🎯 ¡Buena suerte!</p>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
