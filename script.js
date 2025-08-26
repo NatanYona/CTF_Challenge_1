@@ -1,4 +1,4 @@
-// Matrix rain effect
+        // Matrix rain effect
         const canvas = document.getElementById('matrix');
         const ctx = canvas.getContext('2d');
         
@@ -65,7 +65,21 @@
             }, 2000);
         }
         
-        // Submit flag function
+        // Ofuscación de la flag (múltiples capas)
+        const _0x1a2b = ['Q1RGe2VqZW1wbG9fZmxhZ18xMjN9', 'YWRtaW4=', 'aGFja2Vy', 'cm9vdA=='];
+        const _0x3c4d = (str) => atob(str);
+        const _0x5e6f = (a, b) => String.fromCharCode(...a.split('').map((c, i) => c.charCodeAt(0) ^ b.charCodeAt(i % b.length)));
+        const _0x7g8h = () => _0x3c4d(_0x1a2b[0]);
+        
+        // Anti-debugging simple
+        const _debug = () => {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            return end - start > 100;
+        };
+        
+        // Submit flag function con validación ofuscada
         function submitFlag(event) {
             event.preventDefault();
             
@@ -73,13 +87,24 @@
             const statusMessage = document.getElementById('statusMessage');
             const flag = flagInput.value.trim();
             
-            // Simular validación (reemplaza con tu lógica real)
-            const correctFlag = "CTF{ejemplo_flag_123}"; // Cambia esto por tu flag real
+            // Anti-debugging check
+            if (_debug()) {
+                statusMessage.textContent = '🔒 Sistema bloqueado por actividad sospechosa';
+                statusMessage.classList.add('status-error', 'show');
+                return;
+            }
             
             statusMessage.classList.remove('show', 'status-success', 'status-error');
             
             setTimeout(() => {
-                if (flag === correctFlag) {
+                // Validación con flag ofuscada
+                const correctFlag = _0x7g8h(); // Flag en base64 ofuscada
+                
+                // Verificación con hash adicional para mayor seguridad
+                const flagHash = btoa(flag).split('').reverse().join('');
+                const correctHash = btoa(correctFlag).split('').reverse().join('');
+                
+                if (flag === correctFlag && flagHash === correctHash) {
                     statusMessage.textContent = '🎉 ¡FLAG CORRECTA! ¡Felicitaciones, hacker!';
                     statusMessage.classList.add('status-success', 'show');
                     
@@ -88,6 +113,9 @@
                     setTimeout(() => {
                         document.body.style.animation = '';
                     }, 1000);
+                    
+                    // Easter egg en consola
+                    console.log('🎯 ' + _0x3c4d('RmVsaWNpdGFjaW9uZXMhIEhhcyBkZXNibG9xdWVhZG8gZWwgc2lzdGVtYQ=='));
                     
                 } else if (flag.length > 0) {
                     statusMessage.textContent = '❌ Flag incorrecta. Sigue intentando...';
