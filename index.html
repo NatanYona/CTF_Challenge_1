@@ -33,12 +33,35 @@
         </div>
         
         <div class="content-section">
-            <div class="section-title">[DESCARGA] Challenge Files</div>
-            <p style="margin-bottom: 15px; opacity: 0.8;">Descarga el archivo comprimido del CTF y comienza tu misión.</p>
-            <a href="#" class="download-btn" onclick="downloadFile()">
-                📦 DESCARGAR CTF.ZIP
-            </a>
-        </div>
+    <div class="section-title">[SERVIDOR] Sandbox Virtual CTF</div>
+    <p style="margin-bottom: 15px; opacity: 0.8;">
+        Conecta al entorno sandbox para completar el challenge en una terminal virtual.
+    </p>
+    
+    <a href="https://natanyona.github.io/CTF_Terminal/" target="_blank" class="server-btn" onclick="connectToServer()">
+        🌐 CONECTAR AL SERVIDOR
+    </a>
+    
+    <div class="server-status">
+        <div class="status-indicator"></div>
+        <span>Servidor activo - Sandbox listo para conexión</span>
+    </div>
+    
+    <div class="server-info">
+        <strong>Especificaciones del entorno:</strong><br>
+        • Terminal Linux interactiva<br>
+        • Herramientas de pentesting preinstaladas<br>
+        • Entorno aislado y seguro<br>
+        • Acceso directo desde el navegador
+    </div>
+    
+    <div class="connection-details">
+        <div style="color: #00ffff; margin-bottom: 3px;">Detalles de conexión:</div>
+        <div>Protocolo: HTTPS Seguro</div>
+        <div>Estado: Online</div>
+        <div>Latencia: < 50ms</div>
+    </div>
+</div>
         
         <div class="content-section">
             <div class="section-title">[SUBMISIÓN] Flag Validation</div>
@@ -50,9 +73,6 @@
             <div id="statusMessage" class="status-message"></div>
         </div>
         
-        <div style="text-align: center; margin-top: 30px; opacity: 0.6; font-size: 0.9em;">
-            <p>🔒 Sistema encriptado | 👾 Modo hacker activado | 🎯 ¡Buena suerte!</p>
-        </div>
     </div>
     <script src="script.js"></script>
 </body>
