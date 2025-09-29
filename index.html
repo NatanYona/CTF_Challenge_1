@@ -7,11 +7,13 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="./public/Favicon.ico" type="image/x-icon">
 </head>
-<body>
     <body>
     <canvas class="matrix-bg" id="matrix"></canvas>
     
+    <canvas class="matrix-bg" id="matrix"></canvas>
+    
     <div class="terminal">
+        <div class="level-indicator">1</div>
         <div class="terminal-header">
             <div class="terminal-title glitch" data-text="SECURE CTF TERMINAL">SECURE CTF TERMINAL</div>
             <div class="terminal-buttons">
@@ -31,37 +33,56 @@
    ╚██████╗   ██║   ██║         ╚██████╗██║  ██║██║  ██║███████╗███████╗███████╗██║ ╚████║╚██████╔╝███████╗
     ╚═════╝   ╚═╝   ╚═╝          ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
         </div>
+
+        <!-- Level Selection Section -->
+        <div class="content-section level-selector">
+            <div class="section-title">[NIVEL] Selección de Dificultad</div>
+            <div class="level-description">
+                Elige tu nivel de desafío. Cada nivel presenta diferentes retos y ambientes únicos.
+            </div>
+            <div class="level-buttons">
+                <button class="level-btn active" onclick="selectLevel(1)">
+                    🟢 NIVEL 1 - ROOKIE
+                </button>
+                <button class="level-btn" onclick="selectLevel(2)">
+                    🔴 NIVEL 2 - ADVANCED
+                </button>
+                <button class="level-btn disabled" onclick="selectLevel(3)">
+                    🔵 NIVEL 3 - ELITE
+                </button>
+            </div>
+        </div>
         
         <div class="content-section">
-    <div class="section-title">[SERVIDOR] Sandbox Virtual CTF</div>
-    <p style="margin-bottom: 15px; opacity: 0.8;">
-        Conecta al entorno sandbox para completar el challenge en una terminal virtual.
-    </p>
-    
-    <a href="https://natanyona.github.io/CTF_Terminal/" target="_blank" class="server-btn" onclick="connectToServer()">
-        🌐 CONECTAR AL SERVIDOR
-    </a>
-    
-    <div class="server-status">
-        <div class="status-indicator"></div>
-        <span>Servidor activo - Sandbox listo para conexión</span>
-    </div>
-    
-    <div class="server-info">
-        <strong>Especificaciones del entorno:</strong><br>
-        • Terminal Linux interactiva<br>
-        • Herramientas de pentesting preinstaladas<br>
-        • Entorno aislado y seguro<br>
-        • Acceso directo desde el navegador
-    </div>
-    
-    <div class="connection-details">
-        <div style="color: #00ffff; margin-bottom: 3px;">Detalles de conexión:</div>
-        <div>Protocolo: HTTPS Seguro</div>
-        <div>Estado: Online</div>
-        <div>Latencia: < 50ms</div>
-    </div>
-</div>
+            <div class="section-title">[SERVIDOR] Sandbox Virtual CTF</div>
+            <p style="margin-bottom: 15px; opacity: 0.8;">
+                Conecta al entorno sandbox para completar el challenge en una terminal virtual.
+            </p>
+            
+            <a href="https://natanyona.github.io/CTF_Terminal/" target="_blank" class="server-btn" onclick="connectToServer()">
+                🌐 CONECTAR AL SERVIDOR
+            </a>
+            
+            <div class="server-status">
+                <div class="status-indicator"></div>
+                <span>Servidor activo - Sandbox listo para conexión</span>
+            </div>
+            
+            <div class="server-info">
+                <strong>Especificaciones del entorno:</strong><br>
+                • Terminal Linux interactiva<br>
+                • Herramientas de pentesting preinstaladas<br>
+                • Entorno aislado y seguro<br>
+                • Acceso directo desde el navegador
+            </div>
+            
+            <div class="connection-details">
+                <div style="color: #00ffff; margin-bottom: 3px;">Detalles de conexión:</div>
+                <div>Protocolo: HTTPS Seguro</div>
+                <div>Estado: Online</div>
+                <div>Latencia: < 50ms</div>
+            </div>
+        </div>
         
         <div class="content-section">
             <div class="section-title">[SUBMISIÓN] Flag Validation</div>
@@ -72,8 +93,47 @@
             </form>
             <div id="statusMessage" class="status-message"></div>
         </div>
-        
+
+        <div class="content-section">
+            <div class="section-title">[HALL OF FAME] Top Hackers</div>
+            <p style="margin-bottom: 15px; opacity: 0.8;">Ve los mejores puntajes de la comunidad hacker con sistema de scoring avanzado.</p>
+            <button onclick="showWallOfFame()" class="download-btn">
+                🏆 VER WALL OF FAME
+            </button>
+        </div>
+
+<!-- Enhanced Shutdown Overlay for Level 3 -->
+        <div class="shutdown-overlay" id="shutdownOverlay">
+            <!-- Floating particles effect -->
+            <div class="particles" id="particles"></div>
+            
+            <div class="shutdown-title">⚠️ SISTEMA CLAUSURADO</div>
+            <div class="coming-soon">PRÓXIMAMENTE</div>
+            
+            <div class="elite-features">
+                <div class="features-title">🔒 CARACTERÍSTICAS ELITE</div>
+                <ul class="feature-list">
+                    <li>Desafíos de criptografía avanzada</li>
+                    <li>Exploits de memoria y buffer overflow</li>
+                    <li>Ingeniería inversa de binarios</li>
+                    <li>Técnicas de evasión de detección</li>
+                    <li>Análisis forense digital</li>
+                    <li>Red Team & Blue Team scenarios</li>
+                </ul>
+            </div>
+            
+            <div class="scrolling-text">
+                <div class="scrolling-text-content">
+                    ••• NIVEL ELITE EN CONSTRUCCIÓN ••• PREPARANDO DESAFÍOS EXTREMOS ••• ACCESO RESTRINGIDO ••• PRÓXIMAMENTE DISPONIBLE ••• SOLO PARA HACKERS EXPERIMENTADOS •••
+                </div>
+            </div>
+            
+            <button class="back-to-level1-btn" onclick="selectLevel(1)">
+                🔄 VOLVER A NIVEL ROOKIE
+            </button>
+        </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
