@@ -908,6 +908,7 @@ function showSuccessMessage(message) {
      - connectToServer() (will pick .server-btn)
    --------------------------- */
 function connectToServer(evt) {
+    const SERVER_URL = "https://natanyona.github.io/CTF_Terminal/";
     let btn = null;
 
     if (evt && evt.target) btn = evt.target;
