@@ -901,25 +901,22 @@ function showSuccessMessage(message) {
     }, 3200);
 }
 
-/* ---------------------------
-   Server connection UI
-   connectToServer accepts:
-     - connectToServer(event)
-     - connectToServer() (will pick .server-btn)
-   --------------------------- */
 function connectToServer(evt) {
-    let btn = null;
+    // Prevenir navegación si es un link
+    if (evt && evt.preventDefault) {
+        evt.preventDefault();
+    }
 
+    let btn = null;
     if (evt && evt.target) btn = evt.target;
-    // fallback: find the first .server-btn
     if (!btn) btn = document.querySelector('.server-btn');
 
     if (!btn) {
-        console.warn('Botón de servidor no encontrado; redirigiendo.');
-        window.location.href = SERVER_URL;
+        console.warn('Botón de servidor no encontrado.');
         return;
     }
 
+    const SERVER_URL = "https://natanyona.github.io/CTF_Terminal/";
     const originalText = btn.innerHTML;
     const originalStyle = {
         background: btn.style.background,
@@ -934,36 +931,24 @@ function connectToServer(evt) {
         btn.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.3)';
     }
 
+    // Actualizar UI
     btn.style.background = 'linear-gradient(45deg, #00ffff, #0099cc)';
     btn.style.color = '#000';
-    btn.innerHTML = '🔄 ESTABLECIENDO CONEXIÓN...';
+    btn.innerHTML = '🔄 ABRIENDO SANDBOX...';
     btn.style.transform = 'scale(1.02)';
     btn.style.boxShadow = '0 0 40px rgba(0, 255, 255, 0.8)';
 
-    setTimeout(() => {
-        btn.innerHTML = '📡 PREPARANDO ENTORNO...';
-        setTimeout(() => {
-            btn.innerHTML = '✅ REDIRIGIENDO A SANDBOX...';
-            try {
-                const serverWindow = window.open(SERVER_URL, '_blank');
-                if (!serverWindow || serverWindow.closed || typeof serverWindow.closed === 'undefined') {
-                    btn.innerHTML = '🚫 POPUP BLOQUEADO';
-                    btn.style.background = 'linear-gradient(45deg, #ff3300, #cc0000)';
-                    console.warn('⚠️ Popup fue bloqueado. Intentando fallback...');
-                    setTimeout(()=> { window.location.href = SERVER_URL; }, 1600);
-                } else {
-                    btn.innerHTML = '🎯 SANDBOX ACTIVO';
-                    btn.style.background = 'linear-gradient(45deg, #00ff00, #33cc33)';
-                    setTimeout(resetButton, 2000);
-                }
-            } catch (err) {
-                console.error('❌ Error conectando al servidor:', err);
-                btn.innerHTML = '❌ ERROR DE CONEXIÓN';
-                btn.style.background = 'linear-gradient(45deg, #ff0000, #990000)';
-                setTimeout(resetButton, 2000);
-            }
-        }, 1000);
-    }, 600);
+    // Abrir en nueva pestaña usando un link temporal
+    const link = document.createElement('a');
+    link.href = SERVER_URL;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.click();
+
+    // Feedback visual
+    btn.innerHTML = '✅ SANDBOX ABIERTO';
+    btn.style.background = 'linear-gradient(45deg, #00ff00, #33cc33)';
+    setTimeout(resetButton, 2000);
 }
 
 /* ---------------------------
@@ -1054,16 +1039,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) {
         form.addEventListener('submit', (e) => submitFlag(e));
     }
-
-    // Attach connectToServer enhancement (if HTML uses inline onclick, it's ok; this is additive)
-    document.querySelectorAll('.server-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // let inline onclick run first (if present). then this
-            // but to avoid double-open, prevent default navigation if anchor.
-            e.preventDefault();
-            connectToServer(e);
-        });
-    });
 
     // style tweaks for scoreboard columns (optional)
     const style = document.createElement('style');
