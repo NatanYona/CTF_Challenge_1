@@ -902,53 +902,35 @@ function showSuccessMessage(message) {
 }
 
 function connectToServer(evt) {
-    // Prevenir navegación si es un link
-    if (evt && evt.preventDefault) {
-        evt.preventDefault();
-    }
-
+    // El <a href target="_blank" rel="noopener"> ya abre la pestaña nueva por sí solo.
+    // No hay que reimplementar la navegación acá: hacerlo con un <a> sintético
+    // desconectado del DOM es lo que rompía la pestaña actual (algunos navegadores
+    // no respetan target="_blank" en un click() sobre un elemento no insertado
+    // y navegan el documento actual como fallback). Esta función solo da feedback visual.
     let btn = null;
-    if (evt && evt.target) btn = evt.target;
+    if (evt && evt.currentTarget) btn = evt.currentTarget;
     if (!btn) btn = document.querySelector('.server-btn');
+    if (!btn) return;
 
-    if (!btn) {
-        console.warn('Botón de servidor no encontrado.');
-        return;
-    }
-
-    const SERVER_URL = "https://natanyona.github.io/CTF_Terminal/";
     const originalText = btn.innerHTML;
     const originalStyle = {
         background: btn.style.background,
         color: btn.style.color
     };
 
-    function resetButton() {
+    btn.style.background = 'linear-gradient(45deg, #00ffff, #0099cc)';
+    btn.style.color = '#000';
+    btn.innerHTML = '✅ SANDBOX ABIERTO';
+    btn.style.transform = 'scale(1.02)';
+    btn.style.boxShadow = '0 0 40px rgba(0, 255, 255, 0.8)';
+
+    setTimeout(() => {
         btn.style.background = originalStyle.background || 'linear-gradient(45deg, #001a33, #003366)';
         btn.style.color = originalStyle.color || '#00ffff';
         btn.innerHTML = originalText;
         btn.style.transform = 'scale(1)';
         btn.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.3)';
-    }
-
-    // Actualizar UI
-    btn.style.background = 'linear-gradient(45deg, #00ffff, #0099cc)';
-    btn.style.color = '#000';
-    btn.innerHTML = '🔄 ABRIENDO SANDBOX...';
-    btn.style.transform = 'scale(1.02)';
-    btn.style.boxShadow = '0 0 40px rgba(0, 255, 255, 0.8)';
-
-    // Abrir en nueva pestaña usando un link temporal
-    const link = document.createElement('a');
-    link.href = SERVER_URL;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.click();
-
-    // Feedback visual
-    btn.innerHTML = '✅ SANDBOX ABIERTO';
-    btn.style.background = 'linear-gradient(45deg, #00ff00, #33cc33)';
-    setTimeout(resetButton, 2000);
+    }, 2000);
 }
 
 /* ---------------------------
