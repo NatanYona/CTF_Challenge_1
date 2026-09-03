@@ -35,14 +35,10 @@
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const body = document.body;
-        if (body.classList.contains('level-2')) {
-            ctx.fillStyle = '#ff3300';
-        } else if (body.classList.contains('level-3')) {
-            ctx.fillStyle = '#6666ff';
-        } else {
-            ctx.fillStyle = '#00ff00';
-        }
+        // El color de la lluvia sale del acento del nivel activo, así no hay
+        // dos paletas que mantener en paralelo (una acá y otra en el CSS).
+        const acento = getComputedStyle(document.body).getPropertyValue('--acento').trim();
+        ctx.fillStyle = acento || '#5fd08a';
 
         ctx.font = fontSize + 'px monospace';
 
@@ -116,14 +112,39 @@ function formatTime(seconds) {
 /* ---------------------------
    Flags y niveles
    --------------------------- */
-/* Estas flags tienen que coincidir EXACTAMENTE con las que entrega la terminal
-   (repo CTF_Terminal). Si se toca un nivel allá, se toca acá. */
-const levelFlags = {
-    1: 'CTF{HICISTE_LAS_MOVIDAS_BIEN}',
-    2: 'CTF{L0S_P3RM1S05_S0N_L4_CL4V3_P4R4_3L_T3S0R0_D3_L0S_H4CK3R5}',
-    3: 'CTF{L4_S3N4L_3NTR3_3L_RU1D0_S3_3NCU3NTR4}',
-    4: 'CTF{PR0C3S0_F4NT4SM4_D3SCUB13RT0}'
+/* Las flags NO viven acá en texto plano: se guarda su SHA-256 y se valida
+   hasheando lo que escribe el jugador. Antes bastaba con abrir el inspector
+   (o mirar el código fuente) para leer las cuatro respuestas.
+
+   Para regenerar un hash si cambia una flag en la terminal:
+     node -e "console.log(require('crypto').createHash('sha256').update('CTF{...}','utf8').digest('hex'))"
+
+   Ojo: esto sube el costo de hacer trampa, no lo vuelve imposible. Los
+   fragmentos siguen estando dentro del bundle de la terminal, que es estática
+   y tiene que poder mostrarlos. Secreto de verdad requiere un backend. */
+const levelFlagHashes = {
+    1: 'c0a86191cae5479597b54726223fc15f775aa2c3206f246b610ffe2bbd95b3a6',
+    2: '4eafdc78e2d83c638c753ad31ef40f244325289ba8c963ad93d5ce867e982ac6',
+    3: '8fdf2d42c1a1db6b1a08f090515ed3531c473f2542cd9c54d5e84c768f9c1581',
+    4: 'c8709cb7a83dfcbfde6206f68f3ed410fe231192a2a192631dbf65dabb1feabc'
 };
+
+async function hashearFlag(texto) {
+    const datos = new TextEncoder().encode(texto);
+    const buffer = await crypto.subtle.digest('SHA-256', datos);
+    return [...new Uint8Array(buffer)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function flagEsCorrecta(texto, nivel) {
+    // crypto.subtle solo existe en contexto seguro (https o localhost).
+    if (!window.crypto || !crypto.subtle) return null;
+    try {
+        return (await hashearFlag(texto)) === levelFlagHashes[nivel];
+    } catch (err) {
+        console.warn('No se pudo validar la flag:', err);
+        return null;
+    }
+}
 
 const NIVELES = {
     1: { nombre: 'Navegación y Exploración', linea: 'ls -la /CTF_Challenge/Inicio', exito: '🎉 ¡Flag correcta! Sabés moverte por el sistema de archivos.' },
@@ -132,7 +153,7 @@ const NIVELES = {
     4: { nombre: 'El Proceso Fantasma',      linea: 'ps | grep 31337',              exito: '👻 ¡Leyenda! Cazaste el proceso fantasma.' }
 };
 
-const TOTAL_NIVELES = Object.keys(levelFlags).length;
+const TOTAL_NIVELES = Object.keys(levelFlagHashes).length;
 
 /*
   selectLevel: compatible con:
@@ -253,10 +274,18 @@ function submitFlag(event) {
 
     if (statusMessage) statusMessage.classList.remove('show', 'status-success', 'status-error');
 
-    setTimeout(() => {
-        const correctFlag = levelFlags[currentLevel];
+    setTimeout(async () => {
+        const esCorrecta = await flagEsCorrecta(flag, currentLevel);
 
-        if (flag === correctFlag) {
+        if (esCorrecta === null) {
+            if (statusMessage) {
+                statusMessage.textContent = '⚠ La validación necesita https o localhost para funcionar.';
+                statusMessage.classList.add('status-error', 'show');
+            }
+            return;
+        }
+
+        if (esCorrecta) {
             stopTimer();
 
             const successMessage = (NIVELES[currentLevel] && NIVELES[currentLevel].exito)
@@ -610,11 +639,20 @@ function closeStatsModal() {
    --------------------------- */
 function loadHighScoresFromLocalStorage() {
     try {
+        // Lo que hay en localStorage puede haber sido editado a mano; se
+        // normaliza al leerlo en vez de confiar en cómo se guardó.
         const raw = localStorage.getItem('ctfHighScores');
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
-        return parsed;
+        return parsed.map(s => ({
+            initials: limpiarIniciales(s && s.initials),
+            score: Number(s && s.score) || 0,
+            time: Number(s && s.time) || 0,
+            attempts: Number(s && s.attempts) || 0,
+            level: Number(s && s.level) || 1,
+            timestamp: Number(s && s.timestamp) || Date.now()
+        }));
     } catch (e) {
         console.warn('Error leyendo highscores:', e);
         return [];
@@ -684,7 +722,7 @@ function submitInitials(score, time, attempts, level = 1) {
     const i1 = (document.getElementById('initial1') || {}).value || 'A';
     const i2 = (document.getElementById('initial2') || {}).value || 'A';
     const i3 = (document.getElementById('initial3') || {}).value || 'A';
-    const initials = (i1 + i2 + i3).slice(0, 3).toUpperCase();
+    const initials = limpiarIniciales(i1 + i2 + i3);
 
     const scores = loadHighScoresFromLocalStorage();
     const entry = {
@@ -737,7 +775,7 @@ function showWallOfFame() {
                 ${top.length > 0 ? top.map((s, idx) => `
                     <div class="score-row ${idx < 3 ? 'top-three' : ''}">
                         <div class="rank">${getRankDisplay(idx+1)}</div>
-                        <div class="initials">${s.initials}</div>
+                        <div class="initials">${escaparHTML(s.initials)}</div>
                         <div class="level-col">${getLevelBadge(s.level)}</div>
                         <div class="time">${formatTime(s.time)}</div>
                         <div class="attempts">${s.attempts}</div>
@@ -755,7 +793,7 @@ function showWallOfFame() {
                 <div class="stats-title">📈 ESTADÍSTICAS POR NIVEL</div>
                 <div class="stats-row"><span>Total de partidas:</span><span>${scores.length}</span></div>
                 <div class="stats-row"><span>Score promedio:</span><span>${scores.length > 0 ? Math.floor(scores.reduce((a,b)=>a+(b.score||0),0)/scores.length).toLocaleString() : '0'}</span></div>
-                ${Object.keys(levelFlags).map(n => `
+                ${Object.keys(levelFlagHashes).map(n => `
                 <div class="stats-row"><span>Nivel ${n} completados:</span><span>${scores.filter(s => s.level === Number(n)).length}</span></div>`).join('')}
                 <div class="stats-row"><span>Mejor tiempo:</span><span>${scores.length > 0 ? formatTime(Math.min(...scores.map(s=>s.time||9999999))) : 'N/A'}</span></div>
                 <div class="stats-row"><span>Score máximo:</span><span>${scores.length > 0 ? Math.max(...scores.map(s=>s.score||0)).toLocaleString() : '0'}</span></div>
@@ -818,6 +856,19 @@ function exportHighScores() {
     showSuccessMessage('📁 Scores exportados correctamente');
 }
 
+/* Deja las iniciales en exactamente 3 caracteres A-Z/0-9. */
+function limpiarIniciales(valor) {
+    const limpio = String(valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+    return limpio.padEnd(3, 'A');
+}
+
+/* Escapa texto antes de meterlo en innerHTML. */
+function escaparHTML(valor) {
+    return String(valor).replace(/[&<>"']/g, c => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+}
+
 function importHighScores() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -833,7 +884,10 @@ function importHighScores() {
                 const parsed = lines.map(line => {
                     const parts = line.split('|');
                     return {
-                        initials: parts[0] || 'AAA',
+                        // Se normalizan las iniciales al leerlas: el archivo lo
+                        // elige el usuario y podría venir de un tercero, así que
+                        // no puede meter markup ni texto arbitrario en el muro.
+                        initials: limpiarIniciales(parts[0]),
                         score: parseInt(parts[1]) || 0,
                         time: parseInt(parts[2]) || 0,
                         attempts: parseInt(parts[3]) || 0,
@@ -1003,13 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => submitFlag(e));
     }
 
-    // style tweaks for scoreboard columns (optional)
-    const style = document.createElement('style');
-    style.textContent = `
-        .scoreboard-header { grid-template-columns: 60px 1fr 80px 100px 80px 100px; }
-        .score-row { grid-template-columns: 60px 1fr 80px 100px 80px 100px; }
-    `;
-    document.head.appendChild(style);
+    // (Las columnas del scoreboard viven en styles.css, no se inyectan desde acá.)
 });
 
 /* ---------------------------
