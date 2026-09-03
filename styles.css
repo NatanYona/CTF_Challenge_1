@@ -574,6 +574,39 @@ body {
 @keyframes glitch-a { 0%, 100% { transform: translate(-2px, 0); } 50% { transform: translate(1px, -1px); } }
 @keyframes glitch-b { 0%, 100% { transform: translate(2px, 0); } 50% { transform: translate(-1px, 1px); } }
 
+/* ── Easter eggs ───────────────────────────────────────────────
+   Los dispara el JS por nombre de animación. Si se renombran acá,
+   se rompen en silencio: el navegador ignora una animación que no
+   existe sin avisar nada. */
+
+/* Konami code. Se mantiene el guiño pero sin el arcoíris saturado
+   del original: un desplazamiento de tono acotado y breve. */
+@keyframes rainbow {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50%      { filter: hue-rotate(85deg) saturate(135%); }
+}
+
+.konami-active {
+  animation: rainbow 2s ease-in-out infinite;
+  outline: 1px solid var(--ambar);
+  outline-offset: -1px;
+}
+
+/* Latido del indicador de estado del sandbox */
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.82); }
+}
+
+/* Sacudón al validar una flag correcta */
+@keyframes glitch {
+  0%, 100% { transform: translate(0, 0); }
+  20%      { transform: translate(-2px, 1px); }
+  40%      { transform: translate(2px, -1px); }
+  60%      { transform: translate(-1px, -1px); }
+  80%      { transform: translate(1px, 1px); }
+}
+
 /* Sacudida al fallar una flag */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }

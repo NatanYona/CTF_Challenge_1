@@ -499,8 +499,8 @@ function showCompletionEasterEggs() {
     const elapsed = getElapsedTime();
     const score = calculateScore(elapsed, failedAttempts, hintUsed);
 
-    const levelName = currentLevel === 1 ? 'ROOKIE' : currentLevel === 2 ? 'ADVANCED' : 'ELITE';
-    const levelColor = currentLevel === 1 ? '#00ff00' : currentLevel === 2 ? '#ff3300' : '#6666ff';
+    const levelName = (NIVELES[currentLevel] && NIVELES[currentLevel].nombre.toUpperCase()) || `NIVEL ${currentLevel}`;
+    const levelColor = getComputedStyle(document.body).getPropertyValue('--acento').trim() || '#5fd08a';
 
     console.log(`%c
 ███████╗██╗     ███████╗██╗   ██╗███████╗██████╗ 
@@ -536,8 +536,10 @@ function showCompletionEasterEggs() {
     };
     window.konami = () => {
         console.log('%cKONAMI TRIGGERED', 'color: #ff00ff');
-        document.querySelector('.terminal')?.classList.add('konami-active');
-        setTimeout(() => document.querySelector('.terminal')?.classList.remove('konami-active'), 2000);
+        // .consola es el contenedor principal; el viejo .terminal ya no existe.
+        const objetivo = document.querySelector('.consola');
+        objetivo?.classList.add('konami-active');
+        setTimeout(() => objetivo?.classList.remove('konami-active'), 2000);
     };
     window.walloffame = () => showWallOfFame();
     window.breakdown = () => {
@@ -978,9 +980,12 @@ async function checkServerStatus() {
         await fetch(SERVER_URL, { method: 'GET', mode: 'no-cors' });
         return true;
     } catch (err) {
-        console.log('No se pudo verificar estado del servidor (CORS o desconexión).', err);
-        // Para UX, devolvemos true porque sandbox es externo y CORS puede bloquear HEAD.
-        return true;
+        // Antes esto devolvía true igual, así que el indicador decía "activo"
+        // aunque el sandbox estuviera caído. Con mode:'no-cors' no se puede leer
+        // el status HTTP, pero un fetch que directamente falla (sin red, host
+        // inalcanzable) sí es señal de que no se llega.
+        console.log('No se pudo alcanzar el sandbox.', err);
+        return false;
     }
 }
 
@@ -989,15 +994,21 @@ function updateServerStatusDisplay() {
     const statusSpan = document.querySelector('.server-status span');
     if (!statusIndicator || !statusSpan) return;
 
+    // Los colores salen de los tokens del CSS para no tener dos paletas.
+    const raiz = getComputedStyle(document.documentElement);
+    const verde = raiz.getPropertyValue('--fosforo').trim() || '#5fd08a';
+    const rojo = raiz.getPropertyValue('--rojo').trim() || '#de6b6b';
+
     checkServerStatus().then(isOnline => {
+        statusIndicator.style.animation = 'pulse-status 2s infinite';
         if (isOnline) {
-            statusIndicator.style.background = '#00ff00';
-            statusIndicator.style.animation = 'pulse-status 2s infinite';
-            statusSpan.textContent = 'Servidor activo - Sandbox listo para conexión';
+            statusIndicator.style.background = verde;
+            statusIndicator.style.boxShadow = `0 0 8px ${verde}`;
+            statusSpan.textContent = 'Sandbox operativo';
         } else {
-            statusIndicator.style.background = '#ff6600';
-            statusIndicator.style.animation = 'pulse-status 1s infinite';
-            statusSpan.textContent = 'Verificando estado del servidor.';
+            statusIndicator.style.background = rojo;
+            statusIndicator.style.boxShadow = `0 0 8px ${rojo}`;
+            statusSpan.textContent = 'No se pudo alcanzar el sandbox';
         }
     });
 }
