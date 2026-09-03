@@ -116,11 +116,23 @@ function formatTime(seconds) {
 /* ---------------------------
    Flags y niveles
    --------------------------- */
+/* Estas flags tienen que coincidir EXACTAMENTE con las que entrega la terminal
+   (repo CTF_Terminal). Si se toca un nivel allá, se toca acá. */
 const levelFlags = {
     1: 'CTF{HICISTE_LAS_MOVIDAS_BIEN}',
     2: 'CTF{L0S_P3RM1S05_S0N_L4_CL4V3_P4R4_3L_T3S0R0_D3_L0S_H4CK3R5}',
-    3: 'CTF{3l1t3_h4ck3r_m4st3r_0f_4ll}'
+    3: 'CTF{L4_S3N4L_3NTR3_3L_RU1D0_S3_3NCU3NTR4}',
+    4: 'CTF{PR0C3S0_F4NT4SM4_D3SCUB13RT0}'
 };
+
+const NIVELES = {
+    1: { nombre: 'Navegación y Exploración', linea: 'ls -la /CTF_Challenge/Inicio', exito: '🎉 ¡Flag correcta! Sabés moverte por el sistema de archivos.' },
+    2: { nombre: 'Permisos y Propietarios',  linea: 'chmod 644 puerta_hierro.txt',  exito: '🔓 ¡Excelente! Dominaste el modelo de permisos de Unix.' },
+    3: { nombre: 'El Ruido y la Señal',      linea: 'grep -r "SEÑAL::" .',          exito: '📡 ¡Perfecto! Separaste la señal del ruido.' },
+    4: { nombre: 'El Proceso Fantasma',      linea: 'ps | grep 31337',              exito: '👻 ¡Leyenda! Cazaste el proceso fantasma.' }
+};
+
+const TOTAL_NIVELES = Object.keys(levelFlags).length;
 
 /*
   selectLevel: compatible con:
@@ -146,7 +158,7 @@ function selectLevel() {
     }
 
     // clamp level
-    level = Math.max(1, Math.min(3, level));
+    level = Math.max(1, Math.min(TOTAL_NIVELES, level));
 
     // reset state
     resetGameState();
@@ -160,46 +172,40 @@ function selectLevel() {
     const indicator = document.querySelector('.level-indicator');
     if (indicator) indicator.textContent = level;
 
-    // Update active button (if clicked)
-    document.querySelectorAll('.level-btn').forEach(btn => btn.classList.remove('active'));
-    if (evt && evt.target && evt.target.classList) {
-        evt.target.classList.add('active');
-    } else {
-        // try to find the button for the level and activate
-        const fallbackBtn = document.querySelectorAll('.level-btn')[level - 1];
-        if (fallbackBtn) fallbackBtn.classList.add('active');
-    }
+    // Marcar el botón del nivel activo. Se usa data-nivel en vez del índice del
+    // NodeList para que reordenar el HTML no rompa la selección.
+    document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.nivel) === level);
+    });
 
-    // Show/hide shutdown overlay
+    // Overlay de nivel bloqueado: hoy los 4 están disponibles, pero queda el
+    // mecanismo listo para cuando se sume uno en construcción.
     const overlay = document.getElementById('shutdownOverlay');
-    if (overlay) {
-        if (level === 3) {
-            overlay.style.display = 'flex';
-        } else {
-            overlay.style.display = 'none';
-        }
-    }
+    if (overlay) overlay.hidden = true;
 
-    // Update terminal title / glitch data-text
-    const terminalTitle = document.querySelector('.terminal-title');
-    const glitchElement = document.querySelector('.glitch');
+    const info = NIVELES[level];
+    const titulo = document.querySelector('.terminal-title');
+    if (titulo && info) titulo.textContent = info.nombre;
 
-    switch (level) {
-        case 1:
-            if (terminalTitle) terminalTitle.textContent = 'SECURE CTF TERMINAL';
-            if (glitchElement) glitchElement.setAttribute('data-text', 'SECURE CTF TERMINAL');
-            break;
-        case 2:
-            if (terminalTitle) terminalTitle.textContent = 'ADVANCED HACKER TERMINAL';
-            if (glitchElement) glitchElement.setAttribute('data-text', 'ADVANCED HACKER TERMINAL');
-            break;
-        case 3:
-            if (terminalTitle) terminalTitle.textContent = 'ELITE MASTER TERMINAL';
-            if (glitchElement) glitchElement.setAttribute('data-text', 'ELITE MASTER TERMINAL');
-            break;
-    }
+    escribirLinea(info ? info.linea : '');
+}
 
-    console.log(`%cNivel ${level} activado`, `color: ${level === 1 ? '#00ff00' : level === 2 ? '#ff3300' : '#6666ff'}; font-weight: bold;`);
+/* Tipea la línea de ejemplo del hero, carácter por carácter. */
+let tipeoTimeout = null;
+function escribirLinea(texto) {
+    const destino = document.getElementById('typedLine');
+    if (!destino) return;
+
+    if (tipeoTimeout) clearTimeout(tipeoTimeout);
+    destino.textContent = '';
+
+    let i = 0;
+    const paso = () => {
+        if (i >= texto.length) return;
+        destino.textContent += texto.charAt(i++);
+        tipeoTimeout = setTimeout(paso, 42);
+    };
+    paso();
 }
 
 function resetGameState() {
@@ -225,17 +231,11 @@ function resetGameState() {
     }
 }
 
-/* ---------------------------
-   Anti-debug helper (simple)
-   --------------------------- */
-const _debug = () => {
-    // ligera heurística para detectar open devtools (no perfecta)
-    const start = performance.now();
-    // eslint-disable-next-line no-debugger
-    debugger;
-    const end = performance.now();
-    return (end - start) > 100;
-};
+/* El "anti-debug" que había acá usaba un `debugger;` para detectar devtools y
+   bloquear el envío de flags. Se sacó a propósito: congela la pestaña de
+   cualquiera que tenga las devtools abiertas, se esquiva en dos clicks, y esto
+   es una herramienta para enseñar seguridad — que los alumnos abran el
+   inspector es parte del ejercicio, no algo a castigar. */
 
 /* ---------------------------
    submitFlag (form)
@@ -251,19 +251,6 @@ function submitFlag(event) {
         console.warn('statusMessage no encontrado en DOM.');
     }
 
-    // Anti-debug
-    try {
-        if (_debug()) {
-            if (statusMessage) {
-                statusMessage.textContent = '🔒 Sistema bloqueado por actividad sospechosa';
-                statusMessage.classList.add('status-error', 'show');
-            }
-            return;
-        }
-    } catch (err) {
-        console.warn('Anti-debug falló', err);
-    }
-
     if (statusMessage) statusMessage.classList.remove('show', 'status-success', 'status-error');
 
     setTimeout(() => {
@@ -272,10 +259,8 @@ function submitFlag(event) {
         if (flag === correctFlag) {
             stopTimer();
 
-            let successMessage = '';
-            if (currentLevel === 1) successMessage = '🎉 ¡FLAG CORRECTA! ¡Bienvenido al mundo hacker!';
-            else if (currentLevel === 2) successMessage = '🔥 ¡EXCELENTE! Has dominado el nivel avanzado!';
-            else successMessage = '👑 ¡LEYENDA! Has conquistado el nivel elite!';
+            const successMessage = (NIVELES[currentLevel] && NIVELES[currentLevel].exito)
+                || '🎉 ¡Flag correcta!';
 
             if (statusMessage) {
                 statusMessage.textContent = successMessage;
@@ -292,10 +277,8 @@ function submitFlag(event) {
         } else if (flag.length > 0) {
             failedAttempts++;
 
-            let errorMessage = '';
-            if (currentLevel === 1) errorMessage = `⚠️ Flag incorrecta. Sigue intentando... (${failedAttempts} intentos fallidos)`;
-            else if (currentLevel === 2) errorMessage = `🔴 Acceso denegado. Nivel avanzado requiere precisión... (${failedAttempts} intentos)`;
-            else errorMessage = `💀 Sistema de seguridad activado. Elite no perdona errores... (${failedAttempts} intentos)`;
+            const plural = failedAttempts === 1 ? 'intento' : 'intentos';
+            const errorMessage = `⚠ Flag incorrecta. Revisá que esté completa, llaves incluidas. (${failedAttempts} ${plural})`;
 
             if (statusMessage) {
                 statusMessage.textContent = errorMessage;
@@ -303,12 +286,9 @@ function submitFlag(event) {
             }
 
             if (flagInput) {
-                flagInput.style.borderColor = currentLevel === 1 ? '#ff0000' : currentLevel === 2 ? '#ff6600' : '#ff3366';
+                // El color sale del acento del nivel via CSS; acá solo la sacudida.
                 flagInput.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    flagInput.style.borderColor = currentLevel === 1 ? '#00ff00' : currentLevel === 2 ? '#ff3300' : '#6666ff';
-                    flagInput.style.animation = '';
-                }, 500);
+                setTimeout(() => { flagInput.style.animation = ''; }, 500);
             }
         }
     }, 800);
@@ -554,8 +534,8 @@ function createStatsModal() {
     modal.id = 'statsModal';
     modal.className = 'stats-modal';
 
-    let levelTitle = currentLevel === 1 ? 'NIVEL ROOKIE COMPLETADO' : currentLevel === 2 ? 'NIVEL ADVANCED DOMINADO' : 'NIVEL ELITE CONQUISTADO';
-    let levelEmoji = currentLevel === 1 ? '🟢' : currentLevel === 2 ? '🔴' : '🔵';
+    const levelTitle = `NIVEL ${currentLevel} SUPERADO`;
+    const levelEmoji = getLevelBadge(currentLevel).split(' ')[0];
 
     modal.innerHTML = `
         <div class="modal-content">
@@ -775,8 +755,8 @@ function showWallOfFame() {
                 <div class="stats-title">📈 ESTADÍSTICAS POR NIVEL</div>
                 <div class="stats-row"><span>Total de partidas:</span><span>${scores.length}</span></div>
                 <div class="stats-row"><span>Score promedio:</span><span>${scores.length > 0 ? Math.floor(scores.reduce((a,b)=>a+(b.score||0),0)/scores.length).toLocaleString() : '0'}</span></div>
-                <div class="stats-row"><span>Nivel 1 completados:</span><span>${scores.filter(s=>s.level===1).length}</span></div>
-                <div class="stats-row"><span>Nivel 2 completados:</span><span>${scores.filter(s=>s.level===2).length}</span></div>
+                ${Object.keys(levelFlags).map(n => `
+                <div class="stats-row"><span>Nivel ${n} completados:</span><span>${scores.filter(s => s.level === Number(n)).length}</span></div>`).join('')}
                 <div class="stats-row"><span>Mejor tiempo:</span><span>${scores.length > 0 ? formatTime(Math.min(...scores.map(s=>s.time||9999999))) : 'N/A'}</span></div>
                 <div class="stats-row"><span>Score máximo:</span><span>${scores.length > 0 ? Math.max(...scores.map(s=>s.score||0)).toLocaleString() : '0'}</span></div>
             </div>
@@ -806,7 +786,8 @@ function closeWallOfFame() {
 }
 
 function getLevelBadge(level) {
-    return level === 1 ? '🟢 1' : level === 2 ? '🔴 2' : level === 3 ? '🔵 3' : level;
+    const badges = { 1: '🟢 1', 2: '🟡 2', 3: '🔵 3', 4: '🟣 4' };
+    return badges[level] || level;
 }
 function getRankDisplay(rank) {
     return rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;

@@ -1,137 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CTF Challegen - Hacker Console</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="shortcut icon" href="./public/Favicon.ico" type="image/x-icon">
+    <title>CTF Challenge — Consola de Operaciones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=4">
 </head>
-    <body>
-    <canvas class="matrix-bg" id="matrix"></canvas>
-    
-    <div class="terminal">
-        <div class="level-indicator">1</div>
-        <div class="terminal-header">
-            <div class="terminal-title glitch" data-text="SECURE CTF TERMINAL">SECURE CTF TERMINAL</div>
-            <div class="terminal-buttons">
-                <div class="btn-circle btn-close"></div>
-                <div class="btn-circle btn-minimize"></div>
-                <div class="btn-circle btn-maximize"></div>
-            </div>
-        </div>
-        
-        <div class="typing-text">root@ctf-server:~$ Iniciando challenge...</div>
-        
-        <div class="ascii-art">
-    ██████╗████████╗███████╗     ██████╗██╗  ██╗ █████╗ ██╗     ██╗     ███████╗███╗   ██╗ ██████╗ ███████╗
-   ██╔════╝╚══██╔══╝██╔════╝    ██╔════╝██║  ██║██╔══██╗██║     ██║     ██╔════╝████╗  ██║██╔════╝ ██╔════╝
-   ██║        ██║   █████╗      ██║     ███████║███████║██║     ██║     █████╗  ██╔██╗ ██║██║  ███╗█████╗  
-   ██║        ██║   ██╔══╝      ██║     ██╔══██║██╔══██║██║     ██║     ██╔══╝  ██║╚██╗██║██║   ██║██╔══╝  
-   ╚██████╗   ██║   ██║         ╚██████╗██║  ██║██║  ██║███████╗███████╗███████╗██║ ╚████║╚██████╔╝███████╗
-    ╚═════╝   ╚═╝   ╚═╝          ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝
-        </div>
+<body class="level-1">
 
-        <!-- Level Selection Section -->
-        <div class="content-section level-selector">
-            <div class="section-title">[NIVEL] Selección de Dificultad</div>
-            <div class="level-description">
-                Elige tu nivel de desafío. Cada nivel presenta diferentes retos y ambientes únicos.
-            </div>
-            <div class="level-buttons">
-                <button class="level-btn active" onclick="selectLevel(1)">
-                    🟢 NIVEL 1 - ROOKIE
-                </button>
-                <button class="level-btn" onclick="selectLevel(2)">
-                    🔴 NIVEL 2 - ADVANCED
-                </button>
-                <button class="level-btn disabled" onclick="selectLevel(3)">
-                    🔵 NIVEL 3 - ELITE
-                </button>
-            </div>
-        </div>
-        
-        <div class="content-section">
-            <div class="section-title">[SERVIDOR] Sandbox Virtual CTF</div>
-            <p style="margin-bottom: 15px; opacity: 0.8;">
-                Conecta al entorno sandbox para completar el challenge en una terminal virtual.
-            </p>
-            
-            <a href="https://natanyona.github.io/CTF_Terminal/" target="_blank" rel="noopener noreferrer" class="server-btn" onclick="connectToServer(event)">
-                🌐 CONECTAR AL SERVIDOR
-            </a>
-            
-            <div class="server-status">
-                <div class="status-indicator"></div>
-                <span>Servidor activo - Sandbox listo para conexión</span>
-            </div>
-            
-            <div class="server-info">
-                <strong>Especificaciones del entorno:</strong><br>
-                • Terminal Linux interactiva<br>
-                • Herramientas de pentesting preinstaladas<br>
-                • Entorno aislado y seguro<br>
-                • Acceso directo desde el navegador
-            </div>
-            
-            <div class="connection-details">
-                <div style="color: #00ffff; margin-bottom: 3px;">Detalles de conexión:</div>
-                <div>Protocolo: HTTPS Seguro</div>
-                <div>Estado: Online</div>
-                <div>Latencia: < 50ms</div>
-            </div>
-        </div>
-        
-        <div class="content-section">
-            <div class="section-title">[SUBMISIÓN] Flag Validation</div>
-            <p style="margin-bottom: 15px; opacity: 0.8;">Ingresa la flag encontrada en el formato: CTF{...}</p>
-            <form id="flagForm" onsubmit="submitFlag(event)">
-                <input type="text" class="flag-input" placeholder="CTF{tu_flag_aqui}" id="flagInput" required>
-                <button type="submit" class="submit-btn">🚀 VERIFICAR FLAG</button>
-            </form>
-            <div id="statusMessage" class="status-message"></div>
-        </div>
+    <canvas id="matrix" aria-hidden="true"></canvas>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
 
-        <div class="content-section">
-            <div class="section-title">[HALL OF FAME] Top Hackers</div>
-            <p style="margin-bottom: 15px; opacity: 0.8;">Ve los mejores puntajes de la comunidad hacker con sistema de scoring avanzado.</p>
-            <button onclick="showWallOfFame()" class="download-btn">
-                🏆 VER WALL OF FAME
-            </button>
-        </div>
+    <div class="consola">
 
-<!-- Enhanced Shutdown Overlay for Level 3 -->
-        <div class="shutdown-overlay" id="shutdownOverlay">
-            <!-- Floating particles effect -->
-            <div class="particles" id="particles"></div>
-            
-            <div class="shutdown-title">⚠️ SISTEMA CLAUSURADO</div>
-            <div class="coming-soon">PRÓXIMAMENTE</div>
-            
-            <div class="elite-features">
-                <div class="features-title">🔒 CARACTERÍSTICAS ELITE</div>
-                <ul class="feature-list">
-                    <li>Desafíos de criptografía avanzada</li>
-                    <li>Exploits de memoria y buffer overflow</li>
-                    <li>Ingeniería inversa de binarios</li>
-                    <li>Técnicas de evasión de detección</li>
-                    <li>Análisis forense digital</li>
-                    <li>Red Team & Blue Team scenarios</li>
-                </ul>
-            </div>
-            
-            <div class="scrolling-text">
-                <div class="scrolling-text-content">
-                    ••• NIVEL ELITE EN CONSTRUCCIÓN ••• PREPARANDO DESAFÍOS EXTREMOS ••• ACCESO RESTRINGIDO ••• PRÓXIMAMENTE DISPONIBLE ••• SOLO PARA HACKERS EXPERIMENTADOS •••
+        <!-- ══════════ RAIL IZQUIERDO ══════════ -->
+        <aside class="rail">
+            <div class="rail-marca">
+                <div class="rail-punto" aria-hidden="true"></div>
+                <div>
+                    <p class="rail-kicker">consola de operaciones</p>
+                    <h1 class="rail-titulo glitch" data-text="CTF">CTF</h1>
                 </div>
             </div>
-            
-            <button class="back-to-level1-btn" onclick="selectLevel(1)">
-                🔄 VOLVER A NIVEL ROOKIE
-            </button>
+
+            <nav class="rail-niveles" aria-label="Selección de nivel">
+                <p class="rail-label">// niveles</p>
+
+                <button class="level-btn nivel-item active" data-nivel="1" onclick="selectLevel(1)">
+                    <span class="nivel-num">01</span>
+                    <span class="nivel-cuerpo">
+                        <span class="nivel-nombre">Navegación</span>
+                        <span class="nivel-desc">ls · cd · cat · mv</span>
+                    </span>
+                    <span class="nivel-marca" aria-hidden="true"></span>
+                </button>
+
+                <button class="level-btn nivel-item" data-nivel="2" onclick="selectLevel(2)">
+                    <span class="nivel-num">02</span>
+                    <span class="nivel-cuerpo">
+                        <span class="nivel-nombre">Permisos</span>
+                        <span class="nivel-desc">chmod · chown · umask</span>
+                    </span>
+                    <span class="nivel-marca" aria-hidden="true"></span>
+                </button>
+
+                <button class="level-btn nivel-item" data-nivel="3" onclick="selectLevel(3)">
+                    <span class="nivel-num">03</span>
+                    <span class="nivel-cuerpo">
+                        <span class="nivel-nombre">Ruido y Señal</span>
+                        <span class="nivel-desc">grep · find · pipes</span>
+                    </span>
+                    <span class="nivel-marca" aria-hidden="true"></span>
+                </button>
+
+                <button class="level-btn nivel-item" data-nivel="4" onclick="selectLevel(4)">
+                    <span class="nivel-num">04</span>
+                    <span class="nivel-cuerpo">
+                        <span class="nivel-nombre">Proceso Fantasma</span>
+                        <span class="nivel-desc">ps · env · tar</span>
+                    </span>
+                    <span class="nivel-marca" aria-hidden="true"></span>
+                </button>
+            </nav>
+
+            <div class="rail-pie">
+                <div class="rail-estado">
+                    <span class="status-indicator" aria-hidden="true"></span>
+                    <span class="server-status"><span>Sandbox operativo</span></span>
+                </div>
+                <button class="rail-fama" onclick="showWallOfFame()">▸ Muro de la fama</button>
+            </div>
+        </aside>
+
+        <!-- ══════════ COLUMNA PRINCIPAL ══════════ -->
+        <main class="lienzo">
+
+            <header class="hero">
+                <div class="hero-meta">
+                    <span class="chip chip-nivel">NIVEL <span class="level-indicator">1</span></span>
+                    <span class="chip">4 desafíos</span>
+                    <span class="chip">sin instalación</span>
+                </div>
+                <h2 class="hero-titulo terminal-title">Navegación y Exploración</h2>
+                <p class="hero-bajada">
+                    Una terminal Linux real, simulada en el navegador. Explorá el sistema de
+                    archivos, resolvé el desafío y traé la flag de vuelta acá.
+                </p>
+
+                <div class="hero-prompt">
+                    <span class="prompt-user">root@ctf-server</span><span class="prompt-sep">:</span><span class="prompt-path">~</span><span class="prompt-sig">$</span>
+                    <span class="typing-text" id="typedLine"></span><span class="caret" aria-hidden="true"></span>
+                </div>
+            </header>
+
+            <!-- ── SANDBOX ── -->
+            <section class="panel panel-sandbox">
+                <div class="panel-cabecera">
+                    <h3 class="panel-titulo">Entorno</h3>
+                    <span class="panel-num">01</span>
+                </div>
+
+                <div class="sandbox-grid">
+                    <div class="sandbox-texto">
+                        <p>
+                            El sandbox corre entero en tu navegador: no hay servidor que hackear,
+                            no hay nada que romper. Abrilo en una pestaña aparte y dejá esta
+                            abierta — el cronómetro corre acá.
+                        </p>
+                        <a href="https://natanyona.github.io/CTF_Terminal/"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="server-btn boton-primario"
+                           onclick="connectToServer(event)">
+                            <span class="boton-icono" aria-hidden="true">▸</span>
+                            Entrar al entorno
+                        </a>
+                    </div>
+
+                    <dl class="sandbox-specs">
+                        <div><dt>Kernel</dt><dd>HackerOS 13.37-leet</dd></div>
+                        <div><dt>Shell</dt><dd>bash simulada</dd></div>
+                        <div><dt>Red</dt><dd>aislada</dd></div>
+                        <div><dt>Persistencia</dt><dd>ninguna</dd></div>
+                    </dl>
+                </div>
+            </section>
+
+            <!-- ── FLAG ── -->
+            <section class="panel panel-flag">
+                <div class="panel-cabecera">
+                    <h3 class="panel-titulo">Validación</h3>
+                    <span class="panel-num">02</span>
+                </div>
+
+                <form id="flagForm" class="flag-form" autocomplete="off">
+                    <label class="flag-label" for="flagInput">
+                        Pegá la flag encontrada · formato <code>CTF{…}</code>
+                    </label>
+                    <div class="flag-fila">
+                        <input type="text"
+                               id="flagInput"
+                               class="flag-input"
+                               placeholder="CTF{...}"
+                               spellcheck="false"
+                               autocomplete="off">
+                        <button type="submit" class="boton-primario boton-validar">Validar</button>
+                    </div>
+                    <p id="statusMessage" class="flag-status" role="status" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <!-- ── CÓMO FUNCIONA ── -->
+            <section class="panel panel-info">
+                <div class="panel-cabecera">
+                    <h3 class="panel-titulo">Cómo puntúa</h3>
+                    <span class="panel-num">03</span>
+                </div>
+
+                <ol class="pasos">
+                    <li>
+                        <span class="paso-n">1</span>
+                        <span><strong>El reloj arranca</strong> al elegir el nivel. Cuanto más rápido resolvés, mayor el multiplicador.</span>
+                    </li>
+                    <li>
+                        <span class="paso-n">2</span>
+                        <span><strong>Cada intento fallido descuenta.</strong> Acertar a la primera da el bonus más alto.</span>
+                    </li>
+                    <li>
+                        <span class="paso-n">3</span>
+                        <span><strong>Tu puntaje entra al muro de la fama</strong> si supera los que ya están, guardado en este navegador.</span>
+                    </li>
+                </ol>
+
+                <p class="nota">
+                    Cambiar de nivel reinicia el cronómetro y los intentos de ese nivel.
+                </p>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ══════════ OVERLAY DE NIVEL BLOQUEADO ══════════ -->
+    <div id="shutdownOverlay" class="overlay-bloqueo" hidden>
+        <div class="bloqueo-caja">
+            <p class="bloqueo-titulo">NIVEL EN CONSTRUCCIÓN</p>
+            <p class="bloqueo-texto">Este desafío todavía no está disponible.</p>
+            <button class="boton-primario" onclick="selectLevel(1)">Volver al nivel 1</button>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>
